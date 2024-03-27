@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import ColorSelection from './ColorSelection';
 import { GiftedChat } from 'react-native-gifted-chat';
 
@@ -33,12 +33,21 @@ const Chat = ({ route, navigation }) => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: selectedColor }]}>
+        <View style={[styles.container, { flex: 1, backgroundColor: selectedColor }]}>
             <Text>Welcome to the chat log!</Text>
             <ColorSelection
                 selectedColor={selectedColor}
                 onSelectColor={handleColorSelection}
             />
+            <GiftedChat
+                messages={messages}
+                onSend={messages => onSend(messages)}
+                user={{
+                    _id: 1
+                }}
+            />
+            {Platform.OS === 'android' ? <KeyboardAvoidingView behavior='height' /> : null}
+            {Platform.OS === 'ios' ? <KeyboardAvoidingView behavior='padding' /> : null}
         </View>
     );
 };
