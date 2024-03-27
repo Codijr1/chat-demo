@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import ColorSelection from './ColorSelection';
-import { GiftedChat } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 
 const Chat = ({ route, navigation }) => {
     const { name } = route.params;
@@ -13,7 +13,7 @@ const Chat = ({ route, navigation }) => {
         setMessages([
             {
                 _id: 1,
-                text: "Hello developer",
+                text: "This is a developer message",
                 createdAt: new Date(),
                 user: {
                     _id: 2,
@@ -29,6 +29,20 @@ const Chat = ({ route, navigation }) => {
             },
         ]);
     }, []);
+
+    const renderBubble = (props) => {
+        return <Bubble
+            {...props}
+            wrapperStyle={{
+                right: {
+                    backgroundColor: "#0191F7"
+                },
+                left: {
+                    backgroundColor: "#FFF"
+                }
+            }}
+        />
+    }
 
     const handleColorSelection = (color) => {
         setSelectedColor(color);
@@ -46,6 +60,7 @@ const Chat = ({ route, navigation }) => {
             <View style={styles.chatContent}>
                 <GiftedChat
                     messages={messages}
+                    renderBubble={renderBubble}
                     onSend={messages => onSend(messages)}
                     user={{
                         _id: 1
@@ -56,8 +71,8 @@ const Chat = ({ route, navigation }) => {
                 selectedColor={selectedColor}
                 onSelectColor={handleColorSelection}
             />
-            {Platform.OS === 'android' ? <KeyboardAvoidingView behavior='height' /> : null}
-
+            {Platform.OS === 'android' ? <KeyboardAvoidingView behavior='height:5' /> : null}
+            {Platform.OS === 'ios' ? <KeyboardAvoidingView behavior='padding:5' /> : null}
         </View>
     );
 };
