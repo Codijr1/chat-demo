@@ -21,6 +21,12 @@ const Chat = ({ route, navigation }) => {
                     avatar: "https://placeimg.com/140/140/any",
                 },
             },
+            {
+                _id: 2,
+                text: 'This is a system message',
+                createdAt: new Date(),
+                system: true,
+            },
         ]);
     }, []);
 
@@ -33,21 +39,25 @@ const Chat = ({ route, navigation }) => {
     };
 
     return (
-        <View style={[styles.container, { flex: 1, backgroundColor: selectedColor }]}>
-            <Text>Welcome to the chat log!</Text>
+        <View style={[styles.container, { backgroundColor: selectedColor }]}>
+            <View style={styles.header}>
+                <Text style={styles.headerText}>Welcome to the Chat Log!</Text>
+            </View>
+            <View style={styles.chatContent}>
+                <GiftedChat
+                    messages={messages}
+                    onSend={messages => onSend(messages)}
+                    user={{
+                        _id: 1
+                    }}
+                />
+            </View>
             <ColorSelection
                 selectedColor={selectedColor}
                 onSelectColor={handleColorSelection}
             />
-            <GiftedChat
-                messages={messages}
-                onSend={messages => onSend(messages)}
-                user={{
-                    _id: 1
-                }}
-            />
             {Platform.OS === 'android' ? <KeyboardAvoidingView behavior='height' /> : null}
-            {Platform.OS === 'ios' ? <KeyboardAvoidingView behavior='padding' /> : null}
+
         </View>
     );
 };
@@ -57,6 +67,18 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center'
+    },
+    header: {
+        paddingTop: 50,
+    },
+    headerText: {
+        fontSize: 25,
+        fontWeight: 'bold',
+    },
+    chatContent: {
+        flex: 1,
+        width: '100%',
+        paddingBottom: 20,
     },
 });
 
