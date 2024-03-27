@@ -19,7 +19,7 @@ const Start = ({ navigation }) => {
                     style={styles.textInput}
                     value={name}
                     onChangeText={setName}
-                    placeholder='Type your username here'
+                    placeholder='Type your name to get started'
                 />
                 <ColorSelection onSelectColor={handleColorSelection} />
                 <Button
