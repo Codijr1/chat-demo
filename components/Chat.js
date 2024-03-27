@@ -1,3 +1,4 @@
+//chat screen
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import ColorSelection from './ColorSelection';

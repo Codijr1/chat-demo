@@ -1,3 +1,4 @@
+//color selection module
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 

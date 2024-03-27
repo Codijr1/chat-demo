@@ -1,3 +1,4 @@
+//start screen
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Button, TextInput, ImageBackground } from 'react-native';
 import backgroundImage from '../assets/Background Image.png';
