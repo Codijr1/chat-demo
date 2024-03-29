@@ -13,6 +13,7 @@ const Chat = ({ route, navigation, db }) => {
         navigation.setOptions({ title: name });
 
         const messagesRef = collection(db, 'messages');
+
         const unsubscribe = onSnapshot(query(messagesRef, orderBy('createdAt', 'desc')), (snapshot) => {
             const updatedMessages = snapshot.docs.map((doc) => {
                 const firebaseData = doc.data();
