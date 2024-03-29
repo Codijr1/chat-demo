@@ -1,34 +1,39 @@
-//chat screen
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import ColorSelection from './ColorSelection';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 
-const Chat = ({ route, navigation }) => {
+const Chat = ({ route, navigation, db }) => {
     const { name } = route.params;
     const [selectedColor, setSelectedColor] = useState(route.params.selectedColor);
     const [messages, setMessages] = useState([]);
 
     useEffect(() => {
         navigation.setOptions({ title: name });
-        setMessages([
-            {
-                _id: 1,
-                text: "This is a developer message",
-                createdAt: new Date(),
-                user: {
-                    _id: 2,
-                    name: "React Native",
-                    avatar: "https://placeimg.com/140/140/any",
-                },
-            },
-            {
-                _id: 2,
-                text: 'This is a system message',
-                createdAt: new Date(),
-                system: true,
-            },
-        ]);
+
+        const messagesRef = collection(db, 'messages');
+        const unsubscribe = onSnapshot(query(messagesRef, orderBy('createdAt', 'desc')), (snapshot) => {
+            const updatedMessages = snapshot.docs.map((doc) => {
+                const firebaseData = doc.data();
+                const message = {
+                    _id: doc.id,
+                    text: firebaseData.text,
+                    createdAt: new Date(firebaseData.createdAt.toMillis()),
+                    user: {
+                        _id: firebaseData.user._id,
+                        name: firebaseData.user.name,
+                        avatar: firebaseData.user.avatar,
+                    },
+                };
+                return message;
+            });
+            setMessages(updatedMessages);
+        });
+
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     const renderBubble = (props) => {
@@ -49,8 +54,8 @@ const Chat = ({ route, navigation }) => {
         setSelectedColor(color);
     };
 
-    const onSend = (newMessages = []) => {
-        setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+    const onSend = (newMessages) => {
+        addDoc(collection(db, "messages"), newMessages[0]);
     };
 
     return (
@@ -64,7 +69,8 @@ const Chat = ({ route, navigation }) => {
                     renderBubble={renderBubble}
                     onSend={messages => onSend(messages)}
                     user={{
-                        _id: 1
+                        _id: route.params.userId,
+                        name: route.params.name,
                     }}
                 />
             </View>

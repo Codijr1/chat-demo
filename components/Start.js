@@ -1,6 +1,6 @@
-//start screen
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Button, TextInput, ImageBackground } from 'react-native';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import backgroundImage from '../assets/Background Image.png';
 import ColorSelection from './ColorSelection';
 
@@ -8,8 +8,24 @@ const Start = ({ navigation }) => {
     const [name, setName] = useState('');
     const [selectedColor, setSelectedColor] = useState(null);
 
+    const auth = getAuth();
+
     const handleColorSelection = (color) => {
         setSelectedColor(color);
+    };
+
+    // anonymous ign in
+    const signInAnonymouslyHandler = () => {
+        signInAnonymously(auth)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                navigation.navigate('Chat', { userId: user.uid, name: name, selectedColor: selectedColor });
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error(errorMessage);
+            });
     };
 
     return (
@@ -24,8 +40,8 @@ const Start = ({ navigation }) => {
                 />
                 <ColorSelection onSelectColor={handleColorSelection} />
                 <Button
-                    title="Go to Chat Screen"
-                    onPress={() => navigation.navigate('Chat', { name, selectedColor })}
+                    title="Start Chatting"
+                    onPress={signInAnonymouslyHandler}
                 />
             </View>
         </ImageBackground>

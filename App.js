@@ -1,3 +1,4 @@
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -6,12 +7,20 @@ import { getFirestore } from "firebase/firestore";
 import Chat from './components/Chat.js';
 import Start from './components/Start.js';
 
+const firebaseConfig = {
+  apiKey: "AIzaSyDvHskJtJSVrvkGZUG-uQYTHbnGz7HA62c",
+  authDomain: "chat-demo.firebaseapp.com",
+  projectId: "chat-demo-30ed1",
+  storageBucket: "chat-demo.appspot.com",
+  messagingSenderId: "22792638389",
+  appId: "1:22792638389:web:e8f0fe4e29fa6e863fc7d2"
+};
+firebase.initializeApp(firebaseConfig);
 
-// Create the navigator
+const db = firebase.firestore();
 const Stack = createNativeStackNavigator();
 
-const App = () => {
-
+export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -38,5 +47,3 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
-
-export default App;
