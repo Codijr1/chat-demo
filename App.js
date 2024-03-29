@@ -4,16 +4,17 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import firebase from 'firebase/app';
 import Chat from './components/Chat.js';
 import Start from './components/Start.js';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDvHskJtJSVrvkGZUG-uQYTHbnGz7HA62c",
-  authDomain: "chat-demo.firebaseapp.com",
-  projectId: "chat-demo-30ed1",
-  storageBucket: "chat-demo.appspot.com",
-  messagingSenderId: "22792638389",
-  appId: "1:22792638389:web:e8f0fe4e29fa6e863fc7d2"
+  apiKey: process.env.REACT_NATIVE_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_NATIVE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_NATIVE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_NATIVE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_NATIVE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_NATIVE_FIREBASE_APP_ID
 };
 firebase.initializeApp(firebaseConfig);
 
