@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import ColorSelection from './ColorSelection';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
-import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const Chat = ({ route, navigation, db }) => {
     const { name } = route.params;
@@ -20,7 +20,7 @@ const Chat = ({ route, navigation, db }) => {
                 const message = {
                     _id: doc.id,
                     text: firebaseData.text,
-                    createdAt: new Date(firebaseData.createdAt.toMillis()),
+                    createdAt: firebaseData.createdAt ? firebaseData.createdAt.toDate() : null, // Check if createdAt exists before converting
                     user: {
                         _id: firebaseData.user._id,
                         name: firebaseData.user.name,
@@ -55,8 +55,17 @@ const Chat = ({ route, navigation, db }) => {
         setSelectedColor(color);
     };
 
-    const onSend = (newMessages) => {
-        addDoc(collection(db, "messages"), newMessages[0]);
+    const onSend = async (newMessages) => {
+        const message = newMessages[0];
+        const { _id, text, user } = message;
+        const createdAt = serverTimestamp();
+        const newMessage = {
+            _id,
+            text,
+            user,
+            createdAt,
+        };
+        await addDoc(collection(db, "messages"), newMessage);
     };
 
     return (

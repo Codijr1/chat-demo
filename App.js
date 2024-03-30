@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, onSnapshot, orderBy } from "firebase/firestore";
+import { getFirestore, enableNetwork, disableNetwork, collection, onSnapshot } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { useNetInfo } from "@react-native-community/netinfo";
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // screens 
 import Chat from './components/Chat.js';
@@ -20,48 +23,41 @@ const firebaseConfig = {
 };
 
 
+// initialize Firebase 
 const app = initializeApp(firebaseConfig);
+
+// initialize Firestore and storage
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+// initialize Firebase Auth with AsyncStorage
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
+
 const Stack = createNativeStackNavigator();
 
-export default function App() {
-  const [messages, setMessages] = useState([]);
+const App = () => {
+  const connectionStatus = useNetInfo();
 
   useEffect(() => {
-    const messagesRef = collection(db, 'messages');
+    if (connectionStatus && connectionStatus.isConnected !== null && connectionStatus.isConnected !== undefined) {
+      if (connectionStatus.isConnected === false) {
+        Alert.alert("Connection Terminated");
+        disableNetwork(db);
+      } else if (connectionStatus.isConnected === true) {
+        enableNetwork(db);
+      }
+    }
+  }, [connectionStatus]);
 
-    const unsubscribe = onSnapshot(query(messagesRef, orderBy('createdAt', 'desc')), (snapshot) => {
-      const updatedMessages = snapshot.docs.map((doc) => {
-        const firebaseData = doc.data();
-        const message = {
-          _id: doc.id,
-          text: firebaseData.text,
-          createdAt: firebaseData.createdAt.toDate(), // Convert Firestore Timestamp to Date
-          user: {
-            _id: firebaseData.user._id,
-            name: firebaseData.user.name,
-            avatar: firebaseData.user.avatar,
-          },
-        };
-        return message;
-      });
-      setMessages(updatedMessages);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [db]);
 
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Start">
         <Stack.Screen name="Start" component={Start} />
-        {/* Pass the db prop to the Chat component */}
         <Stack.Screen name="Chat">
-          {(props) => <Chat {...props} db={db} />}
+          {props => <Chat isConnected={connectionStatus?.isConnected} db={db} storage={storage} {...props} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
@@ -76,3 +72,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+export default App;
