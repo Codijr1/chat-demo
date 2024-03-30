@@ -1,11 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-// firebase
 import { initializeApp } from "firebase/app";
-import { getFirestore, disableNetwork, enableNetwork } from "firebase/firestore";
+import { getFirestore, collection, onSnapshot, orderBy } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // screens 
@@ -21,7 +19,7 @@ const firebaseConfig = {
   appId: "1:22792638389:web:e8f0fe4e29fa6e863fc7d2"
 };
 
-// Initialize Firebase app
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -29,15 +27,33 @@ const storage = getStorage(app);
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  useEffect(() => {
+  const [messages, setMessages] = useState([]);
 
-    const networkPromise = disableNetwork(db);
+  useEffect(() => {
+    const messagesRef = collection(db, 'messages');
+
+    const unsubscribe = onSnapshot(query(messagesRef, orderBy('createdAt', 'desc')), (snapshot) => {
+      const updatedMessages = snapshot.docs.map((doc) => {
+        const firebaseData = doc.data();
+        const message = {
+          _id: doc.id,
+          text: firebaseData.text,
+          createdAt: firebaseData.createdAt.toDate(), // Convert Firestore Timestamp to Date
+          user: {
+            _id: firebaseData.user._id,
+            name: firebaseData.user.name,
+            avatar: firebaseData.user.avatar,
+          },
+        };
+        return message;
+      });
+      setMessages(updatedMessages);
+    });
 
     return () => {
-      enableNetwork(db);
-
+      unsubscribe();
     };
-  }, []);
+  }, [db]);
 
   return (
     <NavigationContainer>
