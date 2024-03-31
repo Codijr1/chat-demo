@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import ColorSelection from './ColorSelection';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Chat = ({ route, navigation, db }) => {
+const Chat = ({ route, navigation, db, isConnected }) => {
     const { name } = route.params;
     const [selectedColor, setSelectedColor] = useState(route.params.selectedColor);
     const [messages, setMessages] = useState([]);
@@ -12,30 +13,54 @@ const Chat = ({ route, navigation, db }) => {
     useEffect(() => {
         navigation.setOptions({ title: name });
 
-        const messagesRef = collection(db, 'messages');
+        if (isConnected) {
+            const messagesRef = collection(db, 'messages');
 
-        const unsubscribe = onSnapshot(query(messagesRef, orderBy('createdAt', 'desc')), (snapshot) => {
-            const updatedMessages = snapshot.docs.map((doc) => {
-                const firebaseData = doc.data();
-                const message = {
-                    _id: doc.id,
-                    text: firebaseData.text,
-                    createdAt: firebaseData.createdAt ? firebaseData.createdAt.toDate() : null, // Check if createdAt exists before converting
-                    user: {
-                        _id: firebaseData.user._id,
-                        name: firebaseData.user.name,
-                        avatar: firebaseData.user.avatar,
-                    },
-                };
-                return message;
+            const unsubscribe = onSnapshot(query(messagesRef, orderBy('createdAt', 'desc')), (snapshot) => {
+                const updatedMessages = snapshot.docs.map((doc) => {
+                    const firebaseData = doc.data();
+                    const message = {
+                        _id: doc.id,
+                        text: firebaseData.text,
+                        createdAt: firebaseData.createdAt ? firebaseData.createdAt.toDate() : null,
+                        user: {
+                            _id: firebaseData.user._id,
+                            name: firebaseData.user.name,
+                            avatar: firebaseData.user.avatar,
+                        },
+                    };
+                    return message;
+                });
+                setMessages(updatedMessages);
+                cacheMessages(updatedMessages);
             });
-            setMessages(updatedMessages);
-        });
 
-        return () => {
-            unsubscribe();
-        };
-    }, []);
+            return () => {
+                unsubscribe();
+            };
+        } else {
+            loadCachedMessages();
+        }
+    }, [isConnected]);
+
+    const cacheMessages = async (messages) => {
+        try {
+            await AsyncStorage.setItem('cachedMessages', JSON.stringify(messages));
+        } catch (error) {
+            console.error('Error caching messages:', error);
+        }
+    };
+
+    const loadCachedMessages = async () => {
+        try {
+            const cachedMessages = await AsyncStorage.getItem('cachedMessages');
+            if (cachedMessages !== null) {
+                setMessages(JSON.parse(cachedMessages));
+            }
+        } catch (error) {
+            console.error('Error loading cached messages:', error);
+        }
+    };
 
     const renderBubble = (props) => {
         return <Bubble
@@ -56,6 +81,8 @@ const Chat = ({ route, navigation, db }) => {
     };
 
     const onSend = async (newMessages) => {
+        if (!isConnected) { return; }
+
         const message = newMessages[0];
         const { _id, text, user } = message;
         const createdAt = serverTimestamp();
@@ -66,6 +93,14 @@ const Chat = ({ route, navigation, db }) => {
             createdAt,
         };
         await addDoc(collection(db, "messages"), newMessage);
+    };
+
+    const renderInputToolbar = (props) => {
+        if (isConnected) {
+            return <InputToolbar {...props} />;
+        } else {
+            return null;
+        }
     };
 
     return (
@@ -82,6 +117,7 @@ const Chat = ({ route, navigation, db }) => {
                         _id: route.params.userId,
                         name: route.params.name,
                     }}
+                    renderInputToolbar={renderInputToolbar}
                 />
             </View>
             <ColorSelection
