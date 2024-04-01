@@ -51,7 +51,6 @@ const App = () => {
     }
   }, [connectionStatus]);
 
-
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Start">

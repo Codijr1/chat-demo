@@ -4,6 +4,7 @@ import ColorSelection from './ColorSelection';
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomActions from './CustomActions';
 
 const Chat = ({ route, navigation, db, isConnected }) => {
     const { name } = route.params;
@@ -118,6 +119,7 @@ const Chat = ({ route, navigation, db, isConnected }) => {
                         name: route.params.name,
                     }}
                     renderInputToolbar={renderInputToolbar}
+                    renderActions={() => <CustomActions onSend={onSend} storage={db} userID={route.params.userId} />}
                 />
             </View>
             <ColorSelection
