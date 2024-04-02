@@ -45,8 +45,10 @@ const CustomActions = ({ onSend, storage, userID }) => {
             aspect: [4, 3],
             quality: 1,
         });
-        if (!result.cancelled) {
+        if (!result.cancelled && result.uri) {
             uploadAndSendImage(result.uri);
+        } else {
+            Alert.alert('Image selection canceled');
         }
     };
 
@@ -57,8 +59,10 @@ const CustomActions = ({ onSend, storage, userID }) => {
             return;
         }
         let result = await ImagePicker.launchCameraAsync();
-        if (!result.cancelled) {
+        if (!result.cancelled && result.uri) {
             uploadAndSendImage(result.uri);
+        } else {
+            Alert.alert('Photo capture canceled');
         }
     };
 
@@ -77,12 +81,12 @@ const CustomActions = ({ onSend, storage, userID }) => {
         });
     };
 
-    const uploadAndSendImage = async (uri) => {
-        const imageName = generateReference(uri);
-        const uploadRef = ref(storage, imageName);
-        const response = await fetch(uri);
+    const uploadAndSendImage = async (imageURI) => {
+        const uniqueRefString = generateReference(imageURI);
+        const newUploadRef = ref(storage, uniqueRefString);
+        const response = await fetch(imageURI);
         const blob = await response.blob();
-        uploadBytes(uploadRef, blob).then(async (snapshot) => {
+        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
             const imageURL = await getDownloadURL(snapshot.ref);
             onSend({ image: imageURL });
         });
