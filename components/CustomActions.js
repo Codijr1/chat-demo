@@ -45,6 +45,7 @@ const CustomActions = ({ onSend, storage, userID }) => {
             aspect: [4, 3],
             quality: 1,
         });
+        console.log("Image Picker Result:", result); // Log the result object
         if (!result.cancelled && result.uri) {
             uploadAndSendImage(result.uri);
         } else {
@@ -59,11 +60,34 @@ const CustomActions = ({ onSend, storage, userID }) => {
             return;
         }
         let result = await ImagePicker.launchCameraAsync();
+        console.log("Camera Result:", result);
         if (!result.cancelled && result.uri) {
             uploadAndSendImage(result.uri);
         } else {
             Alert.alert('Photo capture canceled');
         }
+    };
+
+    const uploadAndSendImage = async (imageURI) => {
+        const uniqueRefString = generateReference(imageURI);
+        const newUploadRef = ref(storage, uniqueRefString);
+        const response = await fetch(imageURI);
+        const blob = await response.blob();
+
+        // Upload image to Firebase Storage
+        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+            const imageURL = await getDownloadURL(snapshot.ref);
+            await addDoc(collection(db, 'images'), { imageURL, createdAt: serverTimestamp() });
+            onSend({ image: imageURL });
+        }).catch(error => {
+            console.error('Error uploading image:', error);
+        });
+    };
+
+    const generateReference = (uri) => {
+        const timeStamp = (new Date()).getTime();
+        const imageName = uri.split("/").pop();
+        return `${userID}-${timeStamp}-${imageName}`;
     };
 
     const shareLocation = async () => {
@@ -79,23 +103,6 @@ const CustomActions = ({ onSend, storage, userID }) => {
                 latitude: location.coords.latitude,
             },
         });
-    };
-
-    const uploadAndSendImage = async (imageURI) => {
-        const uniqueRefString = generateReference(imageURI);
-        const newUploadRef = ref(storage, uniqueRefString);
-        const response = await fetch(imageURI);
-        const blob = await response.blob();
-        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
-            const imageURL = await getDownloadURL(snapshot.ref);
-            onSend({ image: imageURL });
-        });
-    };
-
-    const generateReference = (uri) => {
-        const timeStamp = (new Date()).getTime();
-        const imageName = uri.split("/").pop();
-        return `${userID}-${timeStamp}-${imageName}`;
     };
 
     return (
