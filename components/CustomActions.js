@@ -1,11 +1,11 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, Alert, Button } from 'react-native';
+import { Button, Alert } from 'react-native';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const CustomActions = ({ onSend, storage, userID }) => {
+const CustomActions = ({ onSend, storage, userID, db }) => {
     const { showActionSheetWithOptions } = useActionSheet();
 
     const onActionPress = () => {
@@ -32,7 +32,6 @@ const CustomActions = ({ onSend, storage, userID }) => {
             }
         );
     };
-
     const pickImage = async () => {
         let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permissions.status !== 'granted') {
@@ -45,8 +44,9 @@ const CustomActions = ({ onSend, storage, userID }) => {
             aspect: [4, 3],
             quality: 1,
         });
-        console.log("Image Picker Result:", result); // Log the result object
+        console.log("Image Picker Result:", result);
         if (!result.cancelled && result.uri) {
+            console.log("Selected Image URI:", result.uri);
             uploadAndSendImage(result.uri);
         } else {
             Alert.alert('Image selection canceled');
@@ -60,7 +60,6 @@ const CustomActions = ({ onSend, storage, userID }) => {
             return;
         }
         let result = await ImagePicker.launchCameraAsync();
-        console.log("Camera Result:", result);
         if (!result.cancelled && result.uri) {
             uploadAndSendImage(result.uri);
         } else {
@@ -69,19 +68,20 @@ const CustomActions = ({ onSend, storage, userID }) => {
     };
 
     const uploadAndSendImage = async (imageURI) => {
-        const uniqueRefString = generateReference(imageURI);
-        const newUploadRef = ref(storage, uniqueRefString);
-        const response = await fetch(imageURI);
-        const blob = await response.blob();
+        try {
+            const uniqueRefString = generateReference(imageURI);
+            const newUploadRef = ref(storage, uniqueRefString);
+            const response = await fetch(imageURI);
+            const blob = await response.blob();
 
-        // Upload image to Firebase Storage
-        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+            // Upload image to Firebase Storage
+            const snapshot = await uploadBytes(newUploadRef, blob);
             const imageURL = await getDownloadURL(snapshot.ref);
-            await addDoc(collection(db, 'images'), { imageURL, createdAt: serverTimestamp() });
             onSend({ image: imageURL });
-        }).catch(error => {
+        } catch (error) {
             console.error('Error uploading image:', error);
-        });
+            Alert.alert('Image upload failed');
+        }
     };
 
     const generateReference = (uri) => {

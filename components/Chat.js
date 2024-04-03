@@ -35,7 +35,6 @@ const Chat = ({ route, navigation, db, isConnected }) => {
                 setMessages(updatedMessages);
                 cacheMessages(updatedMessages);
             });
-
             return () => {
                 unsubscribe();
             };
