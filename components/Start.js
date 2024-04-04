@@ -33,7 +33,7 @@ const Start = ({ navigation }) => {
             <View style={styles.container}>
                 <Text>Welcome to the Chat App!</Text>
                 <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { backgroundColor: 'white' }]} // Set background color to white
                     value={name}
                     onChangeText={setName}
                     placeholder='Type your name to get started'
