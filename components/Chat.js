@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from './CustomActions';
 
 const Chat = ({ route, navigation, db, isConnected }) => {
-    const { name } = route.params;
+    const { name, userId } = route.params;
     const [selectedColor, setSelectedColor] = useState(route.params.selectedColor);
     const [messages, setMessages] = useState([]);
 
@@ -102,6 +102,9 @@ const Chat = ({ route, navigation, db, isConnected }) => {
             return null;
         }
     };
+
+    // debugging
+    console.log("UserId:", userId, "Name:", name);
 
     return (
         <View style={[styles.container, { backgroundColor: selectedColor }]}>
