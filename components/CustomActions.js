@@ -33,10 +33,11 @@ const CustomActions = ({ onSend, storage, userID }) => {
                         getLocation();
                         break;
                     default:
+                        break;
                 }
             },
         );
-    }
+    };
 
     const getLocation = async () => {
         let permissions = await Location.requestForegroundPermissionsAsync();
@@ -52,40 +53,45 @@ const CustomActions = ({ onSend, storage, userID }) => {
                 });
             } else Alert.alert("Error occurred while fetching location");
         } else Alert.alert("Permissions haven't been granted.");
-    }
+    };
 
     const pickImage = async () => {
         let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (permissions.status !== 'granted') {
-            Alert.alert('Library Permissions Required');
-            return;
-        }
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images
-        });
-        console.log("Image Picker Result:", result);
-        if (!result.cancelled && result.uri) {
-            console.log("Selected Image URI:", result.uri);
-            uploadAndSendImage(result.uri);
+        if (permissions?.granted) {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            });
+            console.log('Image Picker Result:', result);
+            if (!result.cancelled) {
+                console.log("Selected Image URI:", result.assets[0].uri);
+                await uploadAndSendImage(result.assets[0].uri);
+
+            } else {
+                Alert.alert('Permissions Required');
+            }
         }
     };
 
     const takePhoto = async () => {
         let permissions = await ImagePicker.requestCameraPermissionsAsync();
-        if (permissions.status !== 'granted') {
+        if (permissions?.granted) {
+            let result = await ImagePicker.launchCameraAsync();
+            console.log("Camera Result:", result);
+            if (!result.cancelled && result.assets.length > 0) {
+                const photoURI = result.assets[0].uri;
+                console.log("Taken Photo URI:", photoURI);
+                await uploadAndSendImage(photoURI);
+            }
+        } else {
             Alert.alert('Camera Permissions Required');
-            return;
-        }
-        let result = await ImagePicker.launchCameraAsync();
-        console.log("Camera Result:", result);
-        if (!result.cancelled && result.uri) {
-            console.log("Taken Photo URI:", result.uri);
-            uploadAndSendImage(result.uri);
         }
     };
 
     const uploadAndSendImage = async (imageURI) => {
-        console.log('Uploading image:', imageURI);
+        if (!imageURI) {
+            console.error('No URI found in imageURI');
+            return;
+        }
         const uniqueRefString = generateReference(imageURI);
         const newUploadRef = ref(storage, uniqueRefString);
         try {
@@ -102,13 +108,13 @@ const CustomActions = ({ onSend, storage, userID }) => {
         } finally {
             setUploading(false);
         }
-    }
+    };
 
     const generateReference = (uri) => {
         const timeStamp = (new Date()).getTime();
         const imageName = uri.split("/")[uri.split("/").length - 1];
         return `${userID}-${timeStamp}-${imageName}`;
-    }
+    };
 
     return (
         <>
@@ -116,7 +122,7 @@ const CustomActions = ({ onSend, storage, userID }) => {
             {uploading && <ActivityIndicator />}
         </>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
