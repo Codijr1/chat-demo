@@ -3,7 +3,7 @@ import { StyleSheet, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { initializeApp } from "firebase/app";
-import { getFirestore, enableNetwork, disableNetwork, collection, onSnapshot } from "firebase/firestore";
+import { getFirestore, enableNetwork, disableNetwork } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { useNetInfo } from "@react-native-community/netinfo";
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
