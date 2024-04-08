@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import ColorSelection from './ColorSelection';
-import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
 
-const Chat = ({ route, navigation, db, isConnected }) => {
+const Chat = ({ route, navigation, db, isConnected, storage }) => {
     const { name, userId } = route.params;
     const [selectedColor, setSelectedColor] = useState(route.params.selectedColor);
     const [messages, setMessages] = useState([]);
@@ -29,6 +30,7 @@ const Chat = ({ route, navigation, db, isConnected }) => {
                             name: firebaseData.user.name,
                             avatar: firebaseData.user.avatar,
                         },
+                        location: firebaseData.location
                     };
                     return message;
                 });
@@ -81,35 +83,52 @@ const Chat = ({ route, navigation, db, isConnected }) => {
     };
 
     const onSend = async (newMessages) => {
-        if (!isConnected) { return; }
+        if (!isConnected) {
+            if (newMessages.length > 0) {
+                cacheMessages([...messages, ...newMessages]);
+            }
+            return;
+        }
 
-        const message = newMessages[0];
-        const { _id, text, user } = message;
-        const createdAt = serverTimestamp();
-        const newMessage = {
-            _id,
-            text,
-            user,
-            createdAt,
-        };
-        await addDoc(collection(db, "messages"), newMessage);
-    };
-
-    const renderInputToolbar = (props) => {
-        if (isConnected) {
-            return <InputToolbar {...props} />;
-        } else {
-            return null;
+        if (newMessages.length > 0) {
+            const message = newMessages[0];
+            const { _id, text, user } = message;
+            const createdAt = serverTimestamp();
+            const newMessage = {
+                _id,
+                text,
+                user,
+                createdAt,
+            };
+            await addDoc(collection(db, "messages"), newMessage);
         }
     };
 
-    // debugging
-    console.log("UserId:", userId, "Name:", name);
+    const renderCustomView = (props) => {
+        const { currentMessage } = props;
+        if (currentMessage.location) {
+            return (
+                <MapView
+                    style={{
+                        width: 150,
+                        height: 100,
+                        borderRadius: 13,
+                        margin: 3
+                    }}
+                    region={{
+                        latitude: currentMessage.location.latitude,
+                        longitude: currentMessage.location.longitude,
+                    }}
+                />
+            );
+        }
+        return null;
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: selectedColor }]}>
             <View style={styles.header}>
-                <Text style={styles.headerText}>Welcome to the Chat Log!</Text>
+                <Text style={styles.headerText}>Welcome to the Chat Room</Text>
             </View>
             <View style={styles.chatContent}>
                 <GiftedChat
@@ -120,8 +139,8 @@ const Chat = ({ route, navigation, db, isConnected }) => {
                         _id: route.params.userId,
                         name: route.params.name,
                     }}
-                    renderInputToolbar={renderInputToolbar}
                     renderActions={() => <CustomActions onSend={onSend} storage={db} userID={route.params.userId} />}
+                    renderCustomView={renderCustomView}
                 />
             </View>
             <ColorSelection
