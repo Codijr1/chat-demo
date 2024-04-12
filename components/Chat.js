@@ -139,7 +139,7 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
                         _id: route.params.userId,
                         name: route.params.name,
                     }}
-                    renderActions={() => <CustomActions onSend={onSend} storage={db} userID={route.params.userId} />}
+                    renderActions={() => <CustomActions onSend={onSend} storage={storage} userID={route.params.userId} />}
                     renderCustomView={renderCustomView}
                 />
             </View>

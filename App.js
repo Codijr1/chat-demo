@@ -15,9 +15,9 @@ import Start from './components/Start.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDvHskJtJSVrvkGZUG-uQYTHbnGz7HA62c",
-  authDomain: "chat-demo.firebaseapp.com",
+  authDomain: "chat-demo-30ed1.appspot.com",
   projectId: "chat-demo-30ed1",
-  storageBucket: "chat-demo.appspot.com",
+  storageBucket: "chat-demo-30ed1.appspot.com",
   messagingSenderId: "22792638389",
   appId: "1:22792638389:web:e8f0fe4e29fa6e863fc7d2"
 };
